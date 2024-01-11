@@ -1,0 +1,24 @@
+#!/bin/bash
+#This script streamlines the installation process of k3s,a lightweight Kubernetes orchestration system. 
+#It simplifies the steps of downloading, installing, and configuring k3s
+#Install k3s worker node
+HOST=`hostname`
+IP_MASTER=
+KEY=
+
+hostnamectl set-hostname $HOST
+apt install iptables
+apt install curl
+
+if [ $KEY ]; then
+    curl -sfL https://get.k3s.io | K3S_URL=https://$IP_MASTER:6443 K3S_TOKEN=$KEY sh - 
+    apt-get install open-iscsi
+    service iscsid start
+    systemctl enable iscsid
+    modprobe iscsi_tcp
+    kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.5.3/deploy/prerequisite/longhorn-iscsi-installation.yaml
+    kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.5.3/deploy/longhorn.yaml
+else
+    echo "Provide a valid key!"
+    exit 1
+fi
