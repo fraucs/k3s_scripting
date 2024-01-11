@@ -1,0 +1,19 @@
+#!/bin/bash
+#This script streamlines the installation process of k3s,a lightweight Kubernetes orchestration system. 
+#It simplifies the steps of downloading, installing, and configuring k3s
+HOST=`hostname`
+#Install k3s
+apt install curl 
+hostnamectl set-hostname $HOST
+curl -sfL https://get.k3s.io | sh - 
+
+#Install Prerequisites For Longhorn
+
+apt-get install open-iscsi
+systemctl enable iscsid
+modprobe iscsi_tcp
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.5.3/deploy/prerequisite/longhorn-iscsi-installation.yaml
+apt install bash jq blkid awk grep findmnt
+curl -sSfL https://raw.githubusercontent.com/longhorn/longhorn/v1.5.3/scripts/environment_check.sh | bash
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.5.3/deploy/longhorn.yaml
+kubectl label node $HOST node.longhorn.io/create-default-disk=true
